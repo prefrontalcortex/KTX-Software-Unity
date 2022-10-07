@@ -136,10 +136,10 @@ OnRenderEvent(int eventID) {
                 );
 
                 while (ktx) {
-                    auto uploadErr = ktxTexture_VkUpload(ktx.value(), &vdi, &texture);
-                        //VK_IMAGE_TILING_OPTIMAL,
-                        //VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                        //VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    auto uploadErr = ktxTexture_VkUploadEx(ktx.value(), &vdi, &texture,
+                        VK_IMAGE_TILING_OPTIMAL,
+                        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                     result.texture = texture.image;
                     result.error = uploadErr;
                     g_ktxTextureResults[ktx.value()] = result;
