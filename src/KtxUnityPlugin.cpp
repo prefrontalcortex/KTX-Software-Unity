@@ -31,7 +31,7 @@
 #endif
 
 typedef struct ktxTextureResult {
-    void* texture = 0;
+    VkImage texture;
     GLenum target;
     GLenum error;
 } ktxTextureResult;
@@ -50,9 +50,9 @@ UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 ktx_dequeue_upload(ktxTexture* ktx, void** texture, int32_t* error) {
     const auto result = g_ktxTextureResults.find(ktx);
     if(result!=g_ktxTextureResults.end()) {
-        *texture = result->second.texture;
+        *texture = &result->second.texture;
         *error = result->second.error;
-        g_ktxTextureResults.erase(result);
+        // g_ktxTextureResults.erase(result);
         return true;
     }
     return false;
@@ -126,7 +126,7 @@ OnRenderEvent(int eventID) {
                 // and command pool. Save the handles to these in a struct called vkctx.
                 // ktx VulkanDeviceInfo is used to pass these with the expectation that
                 // apps are likely to upload a large number of textures.
-                ktxVulkanDeviceInfo_Construct(
+                auto err = ktxVulkanDeviceInfo_Construct(
                         &vdi,
                         m_Instance.physicalDevice,
                         m_Instance.device,
@@ -136,9 +136,12 @@ OnRenderEvent(int eventID) {
                 );
 
                 while (ktx) {
-                    ktxTexture_VkUpload(ktx.value(), &vdi, &texture);
-                    result.texture = (void*)texture.image;
-                    result.error = 0;
+                    auto uploadErr = ktxTexture_VkUpload(ktx.value(), &vdi, &texture);
+                        //VK_IMAGE_TILING_OPTIMAL,
+                        //VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                        //VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    result.texture = texture.image;
+                    result.error = uploadErr;
                     g_ktxTextureResults[ktx.value()] = result;
                     ktx = g_ktxTextureQueue.pop();
                 }
